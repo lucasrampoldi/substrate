@@ -5,6 +5,7 @@
 /atelet
 /bin/
 /cmd/ate-spot-handler/ate-spot-handler
+/cmd/ate-idle-reaper/ate-idle-reaper
 
 # Python
 venv/

@@ -50,7 +50,7 @@ func main() {
 	pflag.Parse()
 
 	if *versionFlag {
-		fmt.Println("ate-idle-reaper v1.0.0")
+		fmt.Println("ate-idle-reaper v1.1.0")
 		os.Exit(0)
 	}
 

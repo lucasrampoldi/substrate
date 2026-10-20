@@ -55,8 +55,8 @@ spec:
       - name: regcred
       containers:
       - name: ate-idle-reaper
-        image: docker.io/sistemascivitatis/ate-idle-reaper:v1.0.0
-        imagePullPolicy: IfNotPresent
+        image: docker.io/sistemascivitatis/ate-idle-reaper:v1.1.0
+        imagePullPolicy: Always
         args:
         - "--idle-timeout=2m"
         - "--check-interval=30s"
