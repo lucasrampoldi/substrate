@@ -1,0 +1,29 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: openclaw-ingress
+  namespace: ate-system
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: openclaw-basic-auth
+    nginx.ingress.kubernetes.io/auth-realm: "OpenClaw Authentication"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - openclaw.atel.run
+    secretName: atel-wildcard-tls
+  rules:
+  - host: openclaw.atel.run
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: atenet-router
+            port:
+              number: 80

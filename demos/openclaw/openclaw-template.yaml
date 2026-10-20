@@ -1,0 +1,69 @@
+metadata:
+  atespace: openclaw
+  name: openclaw
+workerSelector:
+  matchLabels:
+    workload: openclaw
+containers:
+- name: openclaw
+  image: ghcr.io/openclaw/openclaw:2026.6.5@sha256:037f49ba1595be9502fb345138d727cd0cfaecf1392cbe0cfe053fb4681386cd
+  command:
+  - /bin/sh
+  - -c
+  - |
+    mkdir -p /home/node/.openclaw /root/.openclaw 2>/dev/null || true
+    if [ ! -s /home/node/.openclaw/openclaw.json ]; then
+      cat << 'EOF' > /home/node/.openclaw/openclaw.json
+    {
+      "gateway": {
+        "controlUi": {
+          "allowedOrigins": [
+            "https://openclaw.atel.run",
+            "http://openclaw.atel.run",
+            "*"
+          ],
+          "dangerouslyAllowHostHeaderOriginFallback": true,
+          "dangerouslyDisableDeviceAuth": true
+        },
+        "trustedProxies": [
+          "10.0.0.0/8",
+          "169.254.0.0/16",
+          "127.0.0.1"
+        ]
+      }
+    }
+    EOF
+      cp /home/node/.openclaw/openclaw.json /root/.openclaw/openclaw.json 2>/dev/null || true
+    fi
+    ln -sf /home/node/.openclaw/openclaw.json /tmp/openclaw.json 2>/dev/null || true
+    exec node /app/openclaw.mjs gateway --bind lan --port 80 --allow-unconfigured --token openclaw-substrate-token-2026
+  env:
+  - name: NODE_ENV
+    value: "production"
+  - name: OPENCLAW_GATEWAY_TOKEN
+    value: "openclaw-substrate-token-2026"
+  - name: OPENCLAW_CONFIG_PATH
+    value: "/home/node/.openclaw/openclaw.json"
+  - name: HOME
+    value: "/home/node"
+  - name: PORT
+    value: "80"
+  wakeupProbe:
+    httpGet:
+      path: /healthz
+      port: 80
+    timeoutSeconds: 45
+resources:
+  limits:
+  - name: cpu
+    quantity: "1"
+  - name: memory
+    quantity: 2Gi
+sandboxConfig:
+  configName: gvisor-default
+  sandboxClass: gvisor
+snapshotConfig:
+  goldenSnapshotConfig:
+    mode: GOLDEN_SNAPSHOT_MODE_ENABLED
+  preferredFidelity: SNAPSHOT_FIDELITY_MEMORY
+  storageLocation: gs://snapshot-substrate-agents-511713/openclaw/

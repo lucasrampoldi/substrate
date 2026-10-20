@@ -1,0 +1,21 @@
+apiVersion: ate.dev/v1alpha1
+kind: WorkerPool
+metadata:
+  name: gvisor-general
+  namespace: ate-workers-gvisor
+  labels:
+    workload: openclaw
+    sandbox: gvisor
+spec:
+  replicas: 1
+  sandboxClasses:
+  - name: gvisor
+  template:
+    resources:
+      limits:
+        cpu: "1"
+        memory: 2Gi
+      requests:
+        cpu: 250m
+        memory: 1Gi
+  workerImage: europe-west1-docker.pkg.dev/agents-511713/ate-images/ateworker-gvisor@sha256:07c8b62556047c3c25057e549e83c02b09ca65f0147179ac34845f12e8635912

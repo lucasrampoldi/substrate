@@ -244,6 +244,7 @@ func setupTestWithOptions(t *testing.T, ns string, options testOptions) *testCon
 		sandboxConfigLister,
 		csiDriverConfigLister,
 		scLister,
+		nil,
 		dialer,
 		instruments,
 		"",

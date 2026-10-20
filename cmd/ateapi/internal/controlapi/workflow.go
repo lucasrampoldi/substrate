@@ -35,6 +35,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
+	corev1listers "k8s.io/client-go/listers/core/v1"
 	storagev1listers "k8s.io/client-go/listers/storage/v1"
 )
 
@@ -111,6 +112,7 @@ type ActorWorkflow struct {
 	dialer               *AteletDialer
 	sandboxConfigLister  listersv1alpha1.SandboxConfigLister
 	storageClassLister   storagev1listers.StorageClassLister
+	nodeLister           corev1listers.NodeLister
 	instruments          *Instruments
 	egressGatewayAddress string
 	pluginRegistry       VolumePluginRegistry
@@ -128,6 +130,7 @@ func NewActorWorkflow(
 	dialer *AteletDialer,
 	sandboxConfigLister listersv1alpha1.SandboxConfigLister,
 	storageClassLister storagev1listers.StorageClassLister,
+	nodeLister corev1listers.NodeLister,
 	instruments *Instruments,
 	egressGatewayAddress string,
 	pluginRegistry VolumePluginRegistry,
@@ -140,6 +143,7 @@ func NewActorWorkflow(
 		dialer:               dialer,
 		sandboxConfigLister:  sandboxConfigLister,
 		storageClassLister:   storageClassLister,
+		nodeLister:           nodeLister,
 		instruments:          instruments,
 		egressGatewayAddress: egressGatewayAddress,
 		pluginRegistry:       pluginRegistry,

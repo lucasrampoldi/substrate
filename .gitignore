@@ -4,6 +4,7 @@
 /kubectl-ate
 /atelet
 /bin/
+/cmd/ate-spot-handler/ate-spot-handler
 
 # Python
 venv/

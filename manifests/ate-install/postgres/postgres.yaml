@@ -251,8 +251,5 @@ spec:
       accessModes: [ "ReadWriteOnce" ]
       resources:
         requests:
-          # Headroom so WAL churn cannot fill the volume: a full pg_wal is a
-          # PANIC that drops every connection. Size also scales provisioned
-          # IOPS/throughput on PD-backed storage classes. The kind overlay
-          # shrinks this claim back down.
-          storage: 500Gi
+          # Lab environment: adjusted to 20Gi to fit standard regional SSD quota
+          storage: 20Gi

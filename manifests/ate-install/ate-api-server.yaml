@@ -20,7 +20,7 @@ metadata:
   name: ate-api-server
 rules:
 - apiGroups: [""]
-  resources: ["pods"]
+  resources: ["pods", "nodes"]
   verbs: ["get", "watch", "list"]
 - apiGroups: ["ate.dev"]
   resources: ["workerpools", "sandboxconfigs", "csidriverconfigs"]

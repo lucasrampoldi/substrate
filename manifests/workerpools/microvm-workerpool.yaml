@@ -1,0 +1,23 @@
+apiVersion: ate.dev/v1alpha1
+kind: WorkerPool
+metadata:
+  name: microvm-general
+  namespace: ate-workers-microvm
+  labels:
+    workload: general
+    sandbox: microvm
+spec:
+  replicas: 1
+  sandboxClasses:
+  - name: microvm
+    configRef:
+      name: microvm
+  workerImage: europe-west1-docker.pkg.dev/agents-511713/ate-images/ateworker-microvm@sha256:c15c48012bbbad9fdac1ea4118f79405c8df8056d27dfa04511cef00b00da8fe
+  template:
+    resources:
+      limits:
+        cpu: "1"
+        memory: 1Gi
+      requests:
+        cpu: 250m
+        memory: 1Gi

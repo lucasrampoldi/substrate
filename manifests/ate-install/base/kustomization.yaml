@@ -32,6 +32,7 @@ resources:
   - ../ate-controller.yaml
   - ../atelet.yaml
   - ../atenet-router.yaml
-  - ../atenet-router-monitoring.yaml
+  # Lab environment: Managed Prometheus (PodMonitoring CRD) is disabled for FinOps
+  # - ../atenet-router-monitoring.yaml
   - ../ate-otel-config.yaml
   - ../ate-system-networkpolicies.yaml

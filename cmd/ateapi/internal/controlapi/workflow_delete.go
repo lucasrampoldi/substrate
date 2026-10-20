@@ -29,6 +29,7 @@ import (
 	"github.com/agent-substrate/substrate/pkg/proto/ateapipb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 // DeleteActor executes the workflow to delete an actor. Idempotent.
@@ -155,6 +156,15 @@ func (w *ActorWorkflow) ensureAteletTerminated(ctx context.Context, actorRef res
 
 	conn, err := w.dialer.DialForAteletOnNode(nodeName)
 	if err != nil {
+		if errors.Is(err, ErrNoAteletOnNode) && w.nodeLister != nil {
+			if _, getErr := w.nodeLister.Get(nodeName); apierrors.IsNotFound(getErr) {
+				slog.InfoContext(ctx, "assigned node no longer exists in cluster, skipping atelet terminate request",
+					slog.Any("actor", actorRef),
+					slog.String("node", nodeName),
+					slog.String("operation", opName))
+				return nil
+			}
+		}
 		return fmt.Errorf("while connecting to atelet on node %q: %w", nodeName, err)
 	}
 

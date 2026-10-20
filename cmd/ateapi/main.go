@@ -281,6 +281,7 @@ func main() {
 	ateletPodInformerFactory, ateletPodInformer := controlapi.AteletInformer(clientset, ateletNamespace)
 	scInformerFactory := informers.NewSharedInformerFactory(clientset, 0)
 	storageClassLister := scInformerFactory.Storage().V1().StorageClasses().Lister()
+	nodeLister := scInformerFactory.Core().V1().Nodes().Lister()
 
 	stopCh := make(chan struct{})
 	defer close(stopCh)
@@ -337,6 +338,7 @@ func main() {
 		sandboxConfigLister,
 		csiDriverConfigLister,
 		storageClassLister,
+		nodeLister,
 		ateletDialer,
 		instruments,
 		*defaultEgressGatewayAddress,

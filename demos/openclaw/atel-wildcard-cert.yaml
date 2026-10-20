@@ -1,0 +1,14 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: atel-wildcard-cert
+  namespace: ate-system
+spec:
+  secretName: atel-wildcard-tls
+  issuerRef:
+    name: letsencrypt-clouddns-prod
+    kind: ClusterIssuer
+  commonName: "*.atel.run"
+  dnsNames:
+  - "*.atel.run"
+  - "atel.run"

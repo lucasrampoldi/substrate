@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: ate-spot-handler
+  namespace: ate-system
+  labels:
+    app.kubernetes.io/name: ate-spot-handler
+    app.kubernetes.io/part-of: agent-substrate
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ate-spot-handler
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ate-spot-handler
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      serviceAccountName: ate-idle-reaper
+      imagePullSecrets:
+      - name: regcred
+      nodeSelector:
+        cloud.google.com/gke-spot: "true"
+      containers:
+      - name: ate-spot-handler
+        image: docker.io/sistemascivitatis/ate-spot-handler:v1.0.0
+        imagePullPolicy: IfNotPresent
+        args:
+        - "--endpoint=api.ate-system.svc:443"
+        - "--check-interval=2s"
+        - "--atel-backend-url=http://atel-backend-svc.atel-system.svc.cluster.local"
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        resources:
+          requests:
+            cpu: 10m
+            memory: 16Mi
+          limits:
+            cpu: 100m
+            memory: 64Mi

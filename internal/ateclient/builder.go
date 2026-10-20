@@ -23,6 +23,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/agent-substrate/substrate/internal/clustertrustbundle"
 	"github.com/agent-substrate/substrate/internal/installdefaults"
@@ -313,22 +314,58 @@ func bearerTokenDialOption(ctx context.Context, clientset *kubernetes.Clientset,
 	if tokenFile != "" {
 		return grpc.WithPerRPCCredentials(fileBearerTokenCreds(tokenFile)), nil
 	}
-	expirationSeconds := int64(3600)
-	tokenRequest := &authv1.TokenRequest{
-		Spec: authv1.TokenRequestSpec{
-			Audiences:         []string{apiServerName()},
-			ExpirationSeconds: &expirationSeconds,
-		},
+	creds := &refreshingBearerTokenCreds{
+		clientset: clientset,
 	}
-	token, err := clientset.CoreV1().ServiceAccounts(systemNamespace()).CreateToken(ctx, clientServiceAccount(), tokenRequest, metav1.CreateOptions{})
-	if err != nil {
-		return nil, fmt.Errorf("failed to request ateapi bearer token: %w", err)
+	// Validate token creation at dial time
+	if _, err := creds.GetRequestMetadata(ctx); err != nil {
+		return nil, err
 	}
-	if token.Status.Token == "" {
-		return nil, fmt.Errorf("failed to request ateapi bearer token: token response was empty")
-	}
-	return grpc.WithPerRPCCredentials(bearerTokenCreds(token.Status.Token)), nil
+	return grpc.WithPerRPCCredentials(creds), nil
 }
+
+type refreshingBearerTokenCreds struct {
+	mu        sync.Mutex
+	clientset *kubernetes.Clientset
+	token     string
+	expiry    time.Time
+}
+
+func (c *refreshingBearerTokenCreds) GetRequestMetadata(ctx context.Context, _ ...string) (map[string]string, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	// Refresh token if empty or within 5 minutes of expiration
+	if c.token == "" || time.Now().After(c.expiry.Add(-5*time.Minute)) {
+		expirationSeconds := int64(3600)
+		tokenRequest := &authv1.TokenRequest{
+			Spec: authv1.TokenRequestSpec{
+				Audiences:         []string{apiServerName()},
+				ExpirationSeconds: &expirationSeconds,
+			},
+		}
+		token, err := c.clientset.CoreV1().ServiceAccounts(systemNamespace()).CreateToken(ctx, clientServiceAccount(), tokenRequest, metav1.CreateOptions{})
+		if err != nil {
+			// If refresh failed but current token hasn't expired yet, use it as fallback
+			if c.token != "" && time.Now().Before(c.expiry) {
+				return map[string]string{"authorization": "Bearer " + c.token}, nil
+			}
+			return nil, fmt.Errorf("failed to request ateapi bearer token: %w", err)
+		}
+		if token.Status.Token == "" {
+			if c.token != "" && time.Now().Before(c.expiry) {
+				return map[string]string{"authorization": "Bearer " + c.token}, nil
+			}
+			return nil, fmt.Errorf("failed to request ateapi bearer token: token response was empty")
+		}
+		c.token = token.Status.Token
+		c.expiry = token.Status.ExpirationTimestamp.Time
+	}
+
+	return map[string]string{"authorization": "Bearer " + c.token}, nil
+}
+
+func (c *refreshingBearerTokenCreds) RequireTransportSecurity() bool { return true }
 
 func readBearerToken(r io.Reader) (bearerTokenCreds, error) {
 	b, err := io.ReadAll(r)
